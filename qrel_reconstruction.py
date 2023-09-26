@@ -70,8 +70,8 @@ def qd_to_prompt(query: str, document: str) -> str:
 # parses the response and returns a number
 def number_parser(content: str) -> int:
     try:
-        words = content.split(' ')
-        return int(re.sub(r'[^\w\s]', '', words[words.index('RELEVANCY:')+1]))
+        words = content.split()
+        return int(re.sub(r'[.]', '', words[words.index('RELEVANCY:')+1]))
     except Exception as e:
         raise ValueError(f'Malformed response: {content}')
     
@@ -128,36 +128,13 @@ def predict_relevance(model: str, query: str, document: str, system_instructions
         print(f'Model hit maximum token limit ({max_tokens}). Consider increasing token limit.\nMessage generated: {content}')
 
 
-
     # Attempt to parse the content for the models prediction
     try:
         relevance_grade = parser(content)
     except Exception as e:
         raise e
 
-    #print(content)
-
     return relevance_grade, prompt_tokens, completion_tokens
-
-
-def prediction_metrics(predictions: pd.DataFrame):
-    # Get confusion matrix of dataset
-    labels = [0, 1, 2, 3]
-
-    # Convert relevancy scores to numpy array
-    relavancy_test = predictions.loc[~pd.isna(predictions["Relevance Predicted"]),
-                                     ("Relevance Actual", "Relevance Predicted")].to_numpy()
-
-    # Remove all rows with -1
-    relavancy_test = relavancy_test[(relavancy_test != -1).all(axis=1), :]
-
-    actual = relavancy_test[:, 0]
-    predicted = relavancy_test[:, 1]
-    print(classification_report(actual, predicted, labels=labels))
-
-    cm = confusion_matrix(actual, predicted, labels=labels)
-
-    ConfusionMatrixDisplay(cm, display_labels=labels).plot()
 
 
 
